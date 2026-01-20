@@ -1,130 +1,444 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tap The Box Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: white;
-        text-align: center;
-    }
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+        }
 
-    .game-box {
-        background: rgba(0,0,0,0.3);
-        padding: 20px;
-        border-radius: 20px;
-        width: 90%;
-        max-width: 350px;
-    }
+        #gameContainer {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
 
-    h1 {
-        margin-bottom: 10px;
-    }
+        h1 {
+            color: white;
+            font-size: 42px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
 
-    .info {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        font-size: 18px;
-    }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
 
-    .tap-box {
-        width: 120px;
-        height: 120px;
-        background: #ffcc00;
-        margin: 20px auto;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        font-weight: bold;
-        color: #333;
-        cursor: pointer;
-        transition: transform 0.1s;
-    }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
 
-    .tap-box:active {
-        transform: scale(0.9);
-    }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-size: 18px;
+            min-width: 120px;
+        }
 
-    button {
-        padding: 10px 20px;
-        border: none;
-        border-radius: 10px;
-        font-size: 16px;
-        cursor: pointer;
-        background: #00e676;
-        margin-top: 10px;
-    }
+        .stat-box span {
+            display: block;
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffff00;
+            margin-top: 5px;
+        }
 
-    button:hover {
-        background: #00c853;
-    }
-</style>
+        #gameBoard {
+            display: grid;
+            grid-template-columns: repeat(4, 80px);
+            gap: 10px;
+            margin: 30px auto;
+            justify-content: center;
+        }
+
+        .card {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid white;
+            border-radius: 10px;
+            font-size: 40px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .card.flipped {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .card.matched {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            cursor: default;
+            animation: matchAnimation 0.5s;
+        }
+
+        @keyframes matchAnimation {
+            0%, 100% { transform: scale(1) rotateZ(0deg); }
+            25% { transform: scale(1.1) rotateZ(-5deg); }
+            75% { transform: scale(1.1) rotateZ(5deg); }
+        }
+
+        .card.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        #restartBtn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        #restartBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+
+        .difficulty-btn.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #gameOverScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .gameOverBox {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 2px solid white;
+        }
+
+        .gameOverBox h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            animation: bounce 0.6s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .gameOverBox p {
+            font-size: 20px;
+            margin: 15px 0;
+        }
+
+        .gameOverBox .emoji {
+            font-size: 60px;
+            margin: 20px 0;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+        }
+
+        .difficulty-selector label {
+            color: white;
+            margin-right: 15px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 32px;
+            }
+
+            #gameBoard {
+                grid-template-columns: repeat(4, 60px);
+                gap: 8px;
+            }
+
+            .card {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
+            }
+
+            .stat-box {
+                min-width: 100px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+
+            .stat-box span {
+                font-size: 22px;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div id="gameContainer">
+        <h1>🎮 Memory Cards 🎮</h1>
+        
+        <div class="difficulty-selector">
+            <label>Difficulty:</label>
+            <button class="difficulty-btn active" data-level="easy">Easy (4x4)</button>
+            <button class="difficulty-btn" data-level="hard">Hard (5x6)</button>
+        </div>
 
-<div class="game-box">
-    <h1>🎯 Tap The Box</h1>
+        <div class="stats">
+            <div class="stat-box">
+                Moves<span id="moves">0</span>
+            </div>
+            <div class="stat-box">
+                Matches<span id="matches">0</span>
+            </div>
+            <div class="stat-box">
+                Time<span id="timer">00:00</span>
+            </div>
+        </div>
 
-    <div class="info">
-        <div>Score: <span id="score">0</span></div>
-        <div>Time: <span id="time">30</span>s</div>
+        <div id="gameBoard"></div>
+
+        <div class="button-group">
+            <button id="restartBtn">New Game</button>
+        </div>
     </div>
 
-    <div class="tap-box" id="tapBox">TAP</div>
+    <div id="gameOverScreen">
+        <div class="gameOverBox">
+            <div class="emoji" id="emoji">🎉</div>
+            <h2>CONGRATULATIONS!</h2>
+            <p>You Won in <span id="finalTime">00:00</span></p>
+            <p>Total Moves: <span id="finalMoves">0</span></p>
+            <p id="rating" style="font-size: 24px; margin-top: 20px;"></p>
+            <button id="restartBtn" style="margin-top: 30px; background: white; color: #667eea;">Play Again</button>
+        </div>
+    </div>
 
-    <button onclick="startGame()">Start Game</button>
-</div>
+    <script>
+        const gameBoard = document.getElementById('gameBoard');
+        const movesDisplay = document.getElementById('moves');
+        const matchesDisplay = document.getElementById('matches');
+        const timerDisplay = document.getElementById('timer');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalTimeDisplay = document.getElementById('finalTime');
+        const finalMovesDisplay = document.getElementById('finalMoves');
+        const ratingDisplay = document.getElementById('rating');
+        const emojiDisplay = document.getElementById('emoji');
+        const restartBtns = document.querySelectorAll('#restartBtn');
+        const difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
-<script>
-    let score = 0;
-    let timeLeft = 30;
-    let gameRunning = false;
-    let timer;
+        const emojis = ['🍕', '🍔', '🍟', '🌭', '🍿', '🥤', '🍪', '🎂', '🍎', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '⚽', '🏀', '🎾', '🏐', '🎮', '🎯', '🎲', '🧩'];
 
-    const scoreEl = document.getElementById("score");
-    const timeEl = document.getElementById("time");
-    const tapBox = document.getElementById("tapBox");
+        let cards = [];
+        let flipped = [];
+        let matched = 0;
+        let moves = 0;
+        let gameRunning = true;
+        let startTime = 0;
+        let timerInterval = null;
+        let gridSize = 4; // 4x4 = 16 cards
+        let difficulty = 'easy';
 
-    tapBox.addEventListener("click", () => {
-        if (!gameRunning) return;
-        score++;
-        scoreEl.textContent = score;
-    });
+        function initGame() {
+            gameBoard.innerHTML = '';
+            cards = [];
+            flipped = [];
+            matched = 0;
+            moves = 0;
+            movesDisplay.textContent = '0';
+            matchesDisplay.textContent = '0';
+            gameRunning = true;
+            gameOverScreen.style.display = 'none';
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            startTimer();
 
-    function startGame() {
-        score = 0;
-        timeLeft = 30;
-        gameRunning = true;
+            const totalCards = gridSize * gridSize / 2;
+            const selectedEmojis = emojis.slice(0, totalCards);
+            const shuffled = [...selectedEmojis, ...selectedEmojis].sort(() => Math.random() - 0.5);
 
-        scoreEl.textContent = score;
-        timeEl.textContent = timeLeft;
+            gameBoard.style.gridTemplateColumns = `repeat(${gridSize}, ${difficulty === 'easy' ? '80px' : '70px'})`;
 
-        clearInterval(timer);
+            shuffled.forEach((emoji, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.dataset.emoji = emoji;
+                card.textContent = '?';
+                card.addEventListener('click', () => flipCard(card));
+                gameBoard.appendChild(card);
+                cards.push(card);
+            });
+        }
 
-        timer = setInterval(() => {
-            timeLeft--;
-            timeEl.textContent = timeLeft;
-
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                gameRunning = false;
-                alert("⏱️ Game Over!\nYour Score: " + score);
+        function flipCard(card) {
+            if (!gameRunning || card.classList.contains('flipped') || card.classList.contains('matched') || flipped.length >= 2) {
+                return;
             }
-        }, 1000);
-    }
-</script>
 
+            card.classList.add('flipped');
+            card.textContent = card.dataset.emoji;
+            flipped.push(card);
+
+            if (flipped.length === 2) {
+                moves++;
+                movesDisplay.textContent = moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            const [card1, card2] = flipped;
+
+            if (card1.dataset.emoji === card2.dataset.emoji) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matched++;
+                matchesDisplay.textContent = matched;
+                flipped = [];
+
+                if (matched === (gridSize * gridSize) / 2) {
+                    endGame();
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                    flipped = [];
+                }, 600);
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 100);
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(timerInterval);
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            finalTimeDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            finalMovesDisplay.textContent = moves;
+
+            const rating = getRating(moves, gridSize);
+            ratingDisplay.textContent = rating.text;
+            emojiDisplay.textContent = rating.emoji;
+
+            setTimeout(() => {
+                gameOverScreen.style.display = 'flex';
+            }, 500);
+        }
+
+        function getRating(moves, size) {
+            const optimalMoves = (size * size) / 2;
+            const ratio = moves / optimalMoves;
+
+            if (ratio <= 1.2) return { text: 'Perfect! 🌟', emoji: '⭐⭐⭐' };
+            if (ratio <= 1.5) return { text: 'Excellent! 👏', emoji: '⭐⭐' };
+            if (ratio <= 2) return { text: 'Great! 😊', emoji: '⭐' };
+            return { text: 'Good Job! 👍', emoji: '🎯' };
+        }
+
+        difficultyBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                difficulty = btn.dataset.level;
+                gridSize = difficulty === 'easy' ? 4 : 5;
+                initGame();
+            });
+        });
+
+        restartBtns.forEach(btn => {
+            btn.addEventListener('click', initGame);
+        });
+
+        initGame();
+    </script>
 </body>
 </html>
